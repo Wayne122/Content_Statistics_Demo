@@ -13,6 +13,7 @@ import pandas as pd
 import nltk
 import pickle
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from google_drive_downloader import GoogleDriveDownloader as gdd
 nltk.download('vader_lexicon')
 nltk.download('punkt') # word_tokenize
 nltk.download('averaged_perceptron_tagger') # pos_tag
@@ -97,9 +98,18 @@ class BlastoffContentStatistics(object):
         if mpath:
             self.mpath = mpath
             if path.exists(self.mpath):
-                self.clf = pickle.load(open(path.join(self.mpath), 'rb'))
+                self.clf = pickle.load(open(self.mpath, 'rb'))
             else:
                 print("Model not found: " + self.mpath)
+        else:
+            try:
+                print("Loading default pretrained model.")
+                gdd.download_file_from_google_drive(file_id='1oFjoL9LWrp2-YPSJL2UhBQ1efV9LiC2n',
+                                                    dest_path='./content_statistic_model.pickle',
+                                                    unzip=False)
+                self.clf = pickle.load(open('content_statistic_model.pickle', 'rb'))
+            except:
+                print("Unable to load default model. Please contact author or train a new one.")
 
     def extract(self, _X):
         if 'Statement' in _X.columns:
