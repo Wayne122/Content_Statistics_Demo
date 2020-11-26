@@ -101,6 +101,14 @@ class BlastoffContentStatistics(object):
                 self.clf = pickle.load(open(self.mpath, 'rb'))
             else:
                 print("Model not found: " + self.mpath)
+                try:
+                    print("Loading default pretrained model.")
+                    gdd.download_file_from_google_drive(file_id='1oFjoL9LWrp2-YPSJL2UhBQ1efV9LiC2n',
+                                                        dest_path='./content_statistic_model.pickle',
+                                                        unzip=False)
+                    self.clf = pickle.load(open('content_statistic_model.pickle', 'rb'))
+                except:
+                    print("Unable to load default model. Please contact author or train a new one.")
         else:
             try:
                 print("Loading default pretrained model.")
