@@ -9,6 +9,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from time import time
 from os import path
+from zipfile import ZipFile
 import pandas as pd
 import nltk
 import pickle
@@ -17,6 +18,9 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 nltk.download('vader_lexicon')
 nltk.download('punkt') # word_tokenize
 nltk.download('averaged_perceptron_tagger') # pos_tag
+
+import keras
+from keras import layers
 
 try:
     import spacy
@@ -94,6 +98,16 @@ class BlastoffContentStatistics(object):
         self.sa = sa
         self.ner = ner
         self.clf = None
+        self.encoder = None
+
+        gdd.download_file_from_google_drive(file_id='1oTfsNgkmEBemkVfrWSjnc-K9svmL7Iak',
+                                            dest_path='./bcs_encoder.zip',
+                                            unzip=False)
+
+        archive = ZipFile('bcs_encoder.zip')
+        for file in archive.namelist():
+            archive.extract(file, './')
+        self.encoder = keras.models.load_model('./bcs_encoder')
 
         if mpath:
             self.mpath = mpath
@@ -425,3 +439,16 @@ class BlastoffContentStatistics(object):
             pickle.dump(self.clf, open(path.join(mpath, 'content_statistic_model.pickle'), 'wb'))
         else:
             print("Path not available.")
+
+
+    def encode(self, _X):
+        if self.encoder:
+            if 'Statement' in _X.columns:
+                X = self.extract(_X)
+                return self.encoder.predict(X)
+            else:
+                print('Statement column not found.')
+                return
+        else:
+            print('Encoder not found.')
+            return
